@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import SignOutButton from "../SignOutButton";
 
 const greenButtons = [
   {
@@ -26,9 +27,10 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen  p-4 sm:p-8 flex items-center justify-center">
       <div className="w-full max-w-4xl">
-        <h1 className="text-3xl font-bold text-white mb-8 text-center">
-          Dashboard
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <SignOutButton />
+        </div>
 
         {/* Green Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
