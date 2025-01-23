@@ -9,32 +9,31 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     const cachedText = localStorage.getItem(`pdf-${file.name}`);
     if (cachedText) return cachedText;
 
-    // If not in cache, read the file
-    const text = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = async (event) => {
-        try {
-          const result = event.target?.result;
-          if (typeof result === 'string') {
-            // Cache the result
-            localStorage.setItem(`pdf-${file.name}`, result);
-            resolve(result);
-          } else {
-            reject(new Error('Failed to read PDF content'));
-          }
-        } catch (error) {
-          reject(error);
-        }
-      };
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    
+    let fullText = '';
+    
+    // Iterate through each page
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      fullText += pageText + '\n';
+    }
 
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
-    });
-
-    return text;
+    // Cache the extracted text
+    localStorage.setItem(`pdf-${file.name}`, fullText);
+    
+    return fullText;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    throw error;
+    throw new Error('Failed to extract text from PDF. Please ensure the file is a valid PDF with readable text.');
   }
 } 
