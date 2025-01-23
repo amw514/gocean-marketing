@@ -11,7 +11,7 @@ export default async function SignIn() {
 
   // Check if user is already signed in
   if (session?.user?.email) {
-    const allowedEmails = ["bigbyteberry@gmail.com","marinalabaff2@gmail.com","liujuanjuan1984@gmail.com"];
+    const allowedEmails = ["bigbyteberry@gmail.com","marinalabaff2@gmail.com"];
     if (allowedEmails.includes(session.user.email)) {
       redirect("/dashboard");
     } else {
