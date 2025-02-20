@@ -3,10 +3,11 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FiUpload, FiFile, FiX } from "react-icons/fi";
+import { FiUpload, FiFile, FiX, FiDownload } from "react-icons/fi";
 
 import { extractTextFromPDF } from "@/lib/pdf";
 import ReactMarkdown from "react-markdown";
+import { exportToPdf, exportToTxt } from '@/lib/export';
 
 const expertRoles = [
   "Act as a Brand manager and...",
@@ -297,26 +298,27 @@ export default function AskPro() {
     try {
       setIsLoading(true);
       const text = await extractTextFromPDF(file);
+
+      if (!text) {
+        setMessages([
+          {
+            role: "assistant",
+            content: "I couldn't read that PDF. You can:\n\n1. Paste the content directly here\n2. Ask your questions, and I'll guide you",
+          },
+        ]);
+        return;
+      }
+
       setPdfContent(text);
       setIsPdfUploaded(true);
-      setMessages((prev) => [
-        ...prev,
+      setMessages([
         {
           role: "assistant",
-          content: `PDF "${file.name}" uploaded successfully! 1. What would you like me to create with the above information?
-2. What is the outcome / final goal?`,
+          content: `PDF processed! How can I help you analyze this content?\n\n1. What insights are you looking for?\n2. What's your goal with this analysis?`,
         },
       ]);
     } catch (error) {
-      console.error("Error reading PDF:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, I had trouble reading that PDF. Please make sure it contains readable text and try again.",
-        },
-      ]);
+      console.error("Error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -327,7 +329,7 @@ export default function AskPro() {
 
     setIsLoading(true);
     const newUserMessage = { role: "user" as const, content: input };
-    setMessages((prev) => [...prev, newUserMessage]);
+    setMessages(prev => [...prev, newUserMessage]);
     setInput("");
 
     try {
@@ -336,29 +338,32 @@ export default function AskPro() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [...messages, newUserMessage],
-          pdfContent,
+          pdfContent: pdfContent || "",
           expertRole: selectedRole,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
-      setMessages((prev) => [
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setMessages(prev => [
         ...prev,
-        {
-          role: "assistant",
-          content: data.message,
-        },
+        { role: "assistant", content: data.message }
       ]);
     } catch (error) {
-      console.error("Error:", error);
-      setMessages((prev) => [
+      console.error("Chat error:", error);
+      setMessages(prev => [
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
-        },
+          content: "I apologize, but I encountered an error. Please try again or rephrase your question."
+        }
       ]);
     } finally {
       setIsLoading(false);
@@ -390,12 +395,19 @@ export default function AskPro() {
             >
               <span>{selectedRole || "Select a role..."}</span>
               <svg
-                className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+                className={`w-4 h-4 transition-transform ${
+                  isDropdownOpen ? "transform rotate-180" : ""
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -419,11 +431,11 @@ export default function AskPro() {
                       onClick={() => {
                         setSelectedRole(role);
                         setIsDropdownOpen(false);
-                        setSearchQuery('');
+                        setSearchQuery("");
                         setFilteredRoles(expertRoles);
                       }}
                       className={`w-full px-4 py-2 text-left text-white hover:bg-red-600/50 transition-colors ${
-                        selectedRole === role ? 'bg-red-600' : ''
+                        selectedRole === role ? "bg-red-600" : ""
                       }`}
                     >
                       {role}
@@ -437,8 +449,12 @@ export default function AskPro() {
           {/* PDF Upload - Compact & Styled */}
           <div
             className={`relative border-2 border-dashed rounded-lg transition-all h-[50px] flex items-center
-              ${dragActive ? 'border-red-500 bg-red-500/10' : 'border-gray-600 hover:border-red-500'}
-              ${fileState ? 'bg-gray-800' : ''}`}
+              ${
+                dragActive
+                  ? "border-red-500 bg-red-500/10"
+                  : "border-gray-600 hover:border-red-500"
+              }
+              ${fileState ? "bg-gray-800" : ""}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -472,14 +488,16 @@ export default function AskPro() {
               <div className="flex items-center justify-between w-full px-4">
                 <div className="flex items-center space-x-2 overflow-hidden">
                   <FiFile className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-white truncate">{fileState.name}</span>
+                  <span className="text-sm text-white truncate">
+                    {fileState.name}
+                  </span>
                 </div>
                 <button
                   type="button"
                   aria-label="Remove uploaded file"
                   onClick={() => {
                     setFileState(null);
-                    setPdfContent('');
+                    setPdfContent("");
                     setIsPdfUploaded(false);
                   }}
                   className="p-1 hover:text-red-400 text-white"
@@ -498,20 +516,30 @@ export default function AskPro() {
               <div
                 key={index}
                 className={`p-3 rounded-lg ${
-                  message.role === "user"
-                    ? "bg-red-600 ml-auto"
-                    : "bg-gray-700"
+                  message.role === "user" ? "bg-red-600 ml-auto" : "bg-gray-700"
                 } max-w-[80%]`}
               >
                 <ReactMarkdown
                   className="text-white prose prose-invert prose-sm max-w-none"
                   components={{
                     p: ({ ...props }) => <p className="mb-2" {...props} />,
-                    ul: ({ ...props }) => <ul className="list-disc ml-4 mb-2" {...props} />,
-                    ol: ({ ...props }) => <ol className="list-decimal ml-4 mb-2" {...props} />,
-                    li: ({ children, ...props }) => <li className="mb-1" {...props}>{children}</li>,
-                    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                    em: ({ children }) => <em className="italic">{children}</em>,
+                    ul: ({ ...props }) => (
+                      <ul className="list-disc ml-4 mb-2" {...props} />
+                    ),
+                    ol: ({ ...props }) => (
+                      <ol className="list-decimal ml-4 mb-2" {...props} />
+                    ),
+                    li: ({ children, ...props }) => (
+                      <li className="mb-1" {...props}>
+                        {children}
+                      </li>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-bold">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
                   }}
                 >
                   {message.content}
@@ -529,9 +557,13 @@ export default function AskPro() {
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isPdfUploaded ? "Ask about your PDF..." : "Please upload a PDF first"}
+              placeholder={
+                isPdfUploaded
+                  ? "Ask about your PDF..."
+                  : "Ask a question or paste your text here..."
+              }
               className="bg-gray-700 text-white border-gray-600 focus:border-red-500"
-              disabled={!isPdfUploaded || isLoading}
+              disabled={isLoading}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -541,13 +573,32 @@ export default function AskPro() {
             />
             <Button
               onClick={sendMessage}
-              disabled={!isPdfUploaded || isLoading || !selectedRole}
+              disabled={isLoading || !selectedRole || !input.trim()}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {isLoading ? "Sending..." : "Send"}
             </Button>
           </div>
         </div>
+
+        {messages.length > 0 && (
+          <div className="fixed bottom-8 right-8 flex flex-col gap-2">
+            <Button
+              onClick={() => exportToPdf(messages, `${fileState?.name || 'Chat'}-Analysis`)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-full shadow-lg flex items-center gap-2"
+            >
+              <FiDownload className="w-4 h-4" />
+              Export PDF
+            </Button>
+            <Button
+              onClick={() => exportToTxt(messages, `${fileState?.name || 'Chat'}-Analysis`)}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 rounded-full shadow-lg flex items-center gap-2"
+            >
+              <FiDownload className="w-4 h-4" />
+              Export TXT
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
