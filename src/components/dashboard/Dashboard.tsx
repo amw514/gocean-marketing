@@ -14,8 +14,8 @@ const greenButtons = [
 ];
 
 const redButtons = [
-  { text: "Update Campaign", link: "/update-campaign" },
   { text: "New Campaign", link: "/new-campaign" },
+  { text: "Update Campaign", link: "/update-campaign" },
   { text: "Ask Pro", link: "/ask-pro" },
 ];
 
