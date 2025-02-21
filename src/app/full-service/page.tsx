@@ -20,6 +20,7 @@ interface Project {
   name: string;
   messages: Message[];
   currentStep: number;
+  currentPromptId: number;
 }
 
 const STEPS = [
@@ -75,11 +76,12 @@ export default function FullService() {
       messages: [
         {
           role: "assistant",
-          content: "Welcome to your new project! Let's start with Project Discovery. What are your main goals?",
+          content: "Welcome! Let's start with Market Research. What niche are you interested in exploring?",
           step: 1
         }
       ],
-      currentStep: 1
+      currentStep: 1,
+      currentPromptId: 1
     };
 
     setProjects(prev => [...prev, newProject]);
@@ -119,12 +121,13 @@ export default function FullService() {
     setInput("");
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/full-service", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [...currentProject.messages, newUserMessage],
           step: currentProject.currentStep,
+          currentPromptId: currentProject.currentPromptId,
           projectContext: currentProject.name
         }),
       });
@@ -132,19 +135,24 @@ export default function FullService() {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
 
-      setProjects(prev => prev.map(p => {
-        if (p.id === activeProject) {
-          return {
-            ...p,
-            messages: [...p.messages, { 
-              role: "assistant", 
-              content: data.message,
-              step: p.currentStep 
-            }]
-          };
-        }
-        return p;
-      }));
+      if (data.isStepComplete) {
+        moveToNextStep();
+      } else {
+        setProjects(prev => prev.map(p => {
+          if (p.id === activeProject) {
+            return {
+              ...p,
+              messages: [...p.messages, { 
+                role: "assistant", 
+                content: data.message,
+                step: p.currentStep 
+              }],
+              currentPromptId: data.nextPromptId
+            };
+          }
+          return p;
+        }));
+      }
     } catch (error) {
       console.error("Chat error:", error);
     } finally {
