@@ -132,8 +132,30 @@ export default function FullService() {
         }),
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
+
+      if (data.error) {
+        setProjects(prev => prev.map(p => {
+          if (p.id === activeProject) {
+            return {
+              ...p,
+              messages: [
+                ...p.messages,
+                {
+                  role: "assistant",
+                  content: "I apologize, but I encountered an error. Please try again with a shorter message or break your request into smaller parts."
+                }
+              ]
+            };
+          }
+          return p;
+        }));
+        return;
+      }
 
       if (data.isStepComplete) {
         moveToNextStep();
@@ -155,6 +177,21 @@ export default function FullService() {
       }
     } catch (error) {
       console.error("Chat error:", error);
+      setProjects(prev => prev.map(p => {
+        if (p.id === activeProject) {
+          return {
+            ...p,
+            messages: [
+              ...p.messages,
+              {
+                role: "assistant",
+                content: "The request timed out. Please try again with a shorter message or break your request into smaller parts."
+              }
+            ]
+          };
+        }
+        return p;
+      }));
     } finally {
       setIsLoading(false);
     }

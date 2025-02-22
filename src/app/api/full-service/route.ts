@@ -512,49 +512,70 @@ interface ChatMessage {
   step?: number;
 }
 
+// Add response configuration
+export const runtime = 'edge'; // Use Edge Runtime
+export const maxDuration = 60; // Set maximum duration
+
 export async function POST(req: Request) {
   try {
-    const { messages, step, currentPromptId, projectContext } =
-      await req.json();
+    const { messages, step, currentPromptId, projectContext } = await req.json();
 
     if (!STEP_PROMPTS[step as keyof typeof STEP_PROMPTS]) {
       return NextResponse.json(
-        { error: "Invalid step number" },
+        { error: 'Invalid step number' },
         { status: 400 }
       );
     }
 
-    const completion = await openai.chat.completions.create({
+    // Add timeout handling
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 50000);
+    });
+
+    const completionPromise = openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        {
-          role: "system",
-          content: createSystemPrompt(step, currentPromptId, projectContext),
+        { 
+          role: "system", 
+          content: createSystemPrompt(step, currentPromptId, projectContext)
         },
         ...messages.map((m: ChatMessage) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
-        })),
+        }))
       ],
       temperature: 0.7,
+      max_tokens: 2500, // Limit token length
+      stream: false, // Disable streaming for faster response
     });
+
+    // Race between completion and timeout
+    const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
 
     // Calculate next prompt ID
     const currentStep = STEP_PROMPTS[step as keyof typeof STEP_PROMPTS];
-    const nextPromptId =
-      currentPromptId < currentStep.prompts.length
-        ? currentPromptId + 1
-        : currentPromptId;
+    const nextPromptId = currentPromptId < currentStep.prompts.length 
+      ? currentPromptId + 1 
+      : currentPromptId;
 
-    return NextResponse.json({
-      message: completion.choices[0].message.content,
-      nextPromptId,
-      isStepComplete: nextPromptId > currentStep.prompts.length,
-    });
+    return new NextResponse(
+      JSON.stringify({
+        message: completion.choices[0].message.content,
+        nextPromptId,
+        isStepComplete: nextPromptId > currentStep.prompts.length
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
   } catch (error) {
-    console.error("Full Service API Error:", error);
+    console.error('Full Service API Error:', error);
     return NextResponse.json(
-      { error: "Failed to process request" },
+      { error: 'Failed to process request. Please try again.' },
       { status: 500 }
     );
   }
