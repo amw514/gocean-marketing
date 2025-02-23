@@ -460,28 +460,26 @@ export default function FullService() {
     }
   };
 
-  function PromptSuggestions({ prompts, onSelect,  completedPrompts }: { 
+  function PromptSuggestions({ prompts, onSelect, completedPrompts }: { 
     prompts: Prompt[], 
     onSelect: (prompt: Prompt) => void,
-    selectedPrompt: Prompt | null,
     completedPrompts: number[]
   }) {
     return (
       <div className="flex flex-wrap gap-2 mb-4">
         {prompts.map((prompt) => {
           const isCompleted = completedPrompts.includes(prompt.id);
-          const isNext = !isCompleted && Math.min(...prompts.map(p => p.id).filter(id => !completedPrompts.includes(id))) === prompt.id;
+          const isAvailable = prompt.id <= Math.min(...prompts.map(p => p.id).filter(id => !completedPrompts.includes(id)));
           
           return (
             <button
               key={prompt.id}
-              onClick={() => isNext && onSelect(prompt)}
-              disabled={!isNext}
+              onClick={() => isAvailable && onSelect(prompt)}
+              disabled={!isAvailable}
               className={cn(
                 "px-3 py-2 rounded-full text-sm text-white transition-colors",
-                isCompleted && "bg-green-600",
-                isNext && "bg-blue-600 hover:bg-blue-700",
-                !isCompleted && !isNext && "bg-gray-700 opacity-50 cursor-not-allowed"
+                (isCompleted || isAvailable) && "bg-green-600 hover:bg-green-700",
+                !isCompleted && !isAvailable && "bg-gray-700 opacity-50 cursor-not-allowed"
               )}
             >
               {prompt.title}
@@ -635,7 +633,6 @@ export default function FullService() {
                       setSelectedPrompt(prompt);
                       setInput(prompt.content);
                     }}
-                    selectedPrompt={selectedPrompt}
                     completedPrompts={currentProject.completedPrompts}
                   />
                 );
