@@ -81,7 +81,7 @@ Please provide detailed data, charts, and sources for all analyses. Format the r
 2. Niche Equation Analysis
 Demographics:
 - Detailed demographic breakdown
-- Psychographic profiles
+- Psychographer profiles
 - Behavioral patterns
 
 Problems:
@@ -172,7 +172,7 @@ Demographics:
 - Professional status
 - Industry/Field
 
-Psychographics:
+Psychographer:
 - Core values
 - Lifestyle choices
 - Hobbies and interests
@@ -464,46 +464,18 @@ Focus on creating a sustainable, scalable business model that can adapt to marke
   // Additional steps can be added here
 };
 
-function createSystemPrompt(
-  step: number,
-  currentPromptId: number,
-  context: string
-): string {
-  const stepData = STEP_PROMPTS[step as keyof typeof STEP_PROMPTS];
-  if (!stepData) return "";
-
-  const currentPrompt = stepData.prompts.find((p) => p.id === currentPromptId);
-  if (!currentPrompt) return "";
-
-  return `You are a senior business development expert specializing in ${stepData.title}.
-Current step: ${currentPrompt.title}
-Project Context: ${context}
-
-Follow this specific prompt: ${currentPrompt.prompt}
-
-Response Requirements:
-1. Provide an extensive, detailed analysis (minimum 800 words)
-2. Structure your response with clear sections:
-   - Executive Summary (reference previous findings)
-   - Comprehensive Analysis
-   - Strategic Insights
-   - Implementation Framework
-   - Next Steps & Recommendations
+function createSystemPrompt(step: number, currentPromptId: number, context: string): string {
+  return `You are a business development expert working on ${context}, step ${step}, prompt ${currentPromptId}.
+Provide clear, concise, and actionable insights.
 
 Guidelines:
-1. Reference and build upon previous market research findings
-2. Maintain consistency with earlier identified trends and opportunities
-3. Use concrete data and real-world examples
-4. Format response with clear headers and subheaders
-5. Include visual representations (tables, charts) in markdown
-6. Provide actionable, specific recommendations
-7. Consider both immediate implementation and long-term strategy
-8. Cite current sources and industry benchmarks
-9. Maintain professional, strategic tone
-10. Focus on practical, implementable solutions
+1. Keep responses brief but informative (max 300 words)
+2. Use bullet points for clarity
+3. Focus on specific, practical recommendations
+4. Include data when relevant
+5. Maintain professional tone
 
-Ensure each section connects with previous market research while developing the niche strategy.
-Format all responses with clear titles, subtitles, and proper markdown formatting.`;
+Format your response with clear sections and bullet points.`;
 }
 
 interface ChatMessage {
