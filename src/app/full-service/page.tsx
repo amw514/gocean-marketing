@@ -21,6 +21,7 @@ interface Project {
   messages: Message[];
   currentStep: number;
   currentPromptId: number;
+  completedPrompts: number[];
 }
 
 interface Prompt {
@@ -298,7 +299,8 @@ export default function FullService() {
         }
       ],
       currentStep: 1,
-      currentPromptId: 1
+      currentPromptId: 1,
+      completedPrompts: []
     };
 
     setProjects(prev => [...prev, newProject]);
@@ -312,12 +314,26 @@ export default function FullService() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !activeProject) return;
-
+    if (!input.trim() || isLoading) return;
+    
+    setIsLoading(true);
     const currentProject = getCurrentProject();
     if (!currentProject) return;
 
-    setIsLoading(true);
+    // Add current prompt to completed prompts when sending message
+    if (selectedPrompt) {
+      setProjects(prev => prev.map(p => {
+        if (p.id === activeProject) {
+          return {
+            ...p,
+            completedPrompts: [...p.completedPrompts, selectedPrompt.id],
+            currentPromptId: selectedPrompt.id + 1 // Increment to next prompt
+          };
+        }
+        return p;
+      }));
+    }
+
     const newUserMessage: Message = { 
       role: "user", 
       content: input,
@@ -424,6 +440,8 @@ export default function FullService() {
         return {
           ...p,
           currentStep: nextStep,
+          currentPromptId: 1, // Reset prompt ID for new step
+          completedPrompts: [], // Reset completed prompts for new step
           messages: [...p.messages, {
             role: "assistant",
             content: `Moving to ${STEPS[nextStep - 1].title}. ${STEPS[nextStep - 1].description}`,
@@ -442,18 +460,34 @@ export default function FullService() {
     }
   };
 
-  function PromptSuggestions({ prompts, onSelect }: { prompts: Prompt[], onSelect: (prompt: Prompt) => void }) {
+  function PromptSuggestions({ prompts, onSelect,  completedPrompts }: { 
+    prompts: Prompt[], 
+    onSelect: (prompt: Prompt) => void,
+    selectedPrompt: Prompt | null,
+    completedPrompts: number[]
+  }) {
     return (
       <div className="flex flex-wrap gap-2 mb-4">
-        {prompts.map((prompt) => (
-          <button
-            key={prompt.id}
-            onClick={() => onSelect(prompt)}
-            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-sm text-white transition-colors"
-          >
-            {prompt.title}
-          </button>
-        ))}
+        {prompts.map((prompt) => {
+          const isCompleted = completedPrompts.includes(prompt.id);
+          const isNext = !isCompleted && Math.min(...prompts.map(p => p.id).filter(id => !completedPrompts.includes(id))) === prompt.id;
+          
+          return (
+            <button
+              key={prompt.id}
+              onClick={() => isNext && onSelect(prompt)}
+              disabled={!isNext}
+              className={cn(
+                "px-3 py-2 rounded-full text-sm text-white transition-colors",
+                isCompleted && "bg-green-600",
+                isNext && "bg-blue-600 hover:bg-blue-700",
+                !isCompleted && !isNext && "bg-gray-700 opacity-50 cursor-not-allowed"
+              )}
+            >
+              {prompt.title}
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -601,6 +635,8 @@ export default function FullService() {
                       setSelectedPrompt(prompt);
                       setInput(prompt.content);
                     }}
+                    selectedPrompt={selectedPrompt}
+                    completedPrompts={currentProject.completedPrompts}
                   />
                 );
               })()}
