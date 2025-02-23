@@ -165,13 +165,105 @@ const STEPS: Step[] = [
     number: 4,
     title: "Offer Creation",
     description: "Design compelling products or services for your audience",
-    prompts: []
+    prompts: [
+      // Core Development
+      {
+        id: 1,
+        title: "Dream Outcome",
+        content: "Brainstorm 20 topics that will help ideal customers achieve their dream outcome. What's the ultimate outcome and how will your product/service help achieve it?"
+      },
+      {
+        id: 2,
+        title: "Product Naming",
+        content: "Create 20 professional names using alliteration and clear benefits. Focus on memorable, professional names that express value. Avoid cute/funny names."
+      },
+      // Program Structure
+      {
+        id: 3,
+        title: "Core Challenges",
+        content: "What challenges does the program address? What specific methods and strategies solve them?"
+      },
+      {
+        id: 4,
+        title: "Program Structure",
+        content: "Outline modules, timelines, steps, and outcomes in a 2-column table format."
+      },
+      {
+        id: 5,
+        title: "Learning Objectives",
+        content: "Create measurable learning objectives for each module. Example: 'By the end, you will be able to list 5 key benefits.'"
+      },
+      // Value & Pricing
+      {
+        id: 6,
+        title: "Value Stack",
+        content: "List problems solved and solutions. Compare small group vs one-to-many formats. Create ranking chart for pain points, purchasing power, targeting ease, and market growth."
+      },
+      {
+        id: 7,
+        title: "Pricing Strategy",
+        content: "Recommend pricing model based on value, market data, and ideal customer. How to reflect exclusivity?"
+      },
+      // Marketing & Conversion
+      {
+        id: 8,
+        title: "Offer Enhancement",
+        content: "Develop strategies for: Scarcity, Urgency, Social Proof, Status, Bonuses, Guarantees, Commitment, Consistency."
+      },
+      {
+        id: 9,
+        title: "Marketing Tactics",
+        content: "Create high-ROI promotional tactics: testimonials, case studies, limited offers. Include messaging strategy for pain points."
+      },
+      // Implementation
+      {
+        id: 10,
+        title: "Launch Plan",
+        content: "Detail resources needed, timeline, and success metrics. Focus on customer delight and easy achievement."
+      }
+    ]
   },
   {
     number: 5,
     title: "Execution & Growth",
     description: "Launch, monitor and scale your business strategy",
-    prompts: []
+    prompts: [
+      {
+        id: 1,
+        title: "Launch Resources",
+        content: "What resources are required to launch and deliver the program effectively? Create a timeline that balances feasibility and customer satisfaction."
+      },
+      {
+        id: 2,
+        title: "Success Metrics",
+        content: "How will the success of the program be measured? What specific metrics should be tracked to ensure goals are met?"
+      },
+      {
+        id: 3,
+        title: "Scaling Opportunities",
+        content: "What opportunities exist for scaling this program and product? How can this business expand its offerings to meet future market demands?"
+      },
+      {
+        id: 4,
+        title: "Growth Partnerships",
+        content: "Propose systems or partnerships that could support long-term growth. Include specific partnership criteria and integration plans."
+      },
+      {
+        id: 5,
+        title: "Growth Roadmap",
+        content: "Propose a roadmap for ongoing support and success monitoring. Highlight partnerships or systems to support long-term growth."
+      },
+      {
+        id: 6,
+        title: "Action Plan",
+        content: "List actionable next steps for implementing the recommendations above, including priority tasks and key milestones. Create a 30-60-90 day plan."
+      },
+      {
+        id: 7,
+        title: "Implementation Strategy",
+        content: "Highlight actionable insights from the information above. What are the immediate next steps for the client to implement these recommendations? Develop a roadmap for ongoing support and success monitoring."
+      }
+    ]
   }
 ];
 
