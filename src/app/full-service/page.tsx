@@ -118,41 +118,6 @@ const STEPS: Step[] = [
         id: 5,
         title: "Engagement and Platforms",
         content: "How does this audience typically engage with similar products or services, and what platforms are most effective for reaching them?"
-      },
-      {
-        id: 6,
-        title: "Audience Overview",
-        content: "Who are the individuals most interested in [your niche]? What challenges do they face, and what are their ultimate goals? What hobbies, passions, or interests intersect with this niche?"
-      },
-      {
-        id: 7,
-        title: "Audience Queries and Gaps",
-        content: "What questions or misconceptions does my audience have about this niche? What knowledge gaps need to be addressed for them to succeed?"
-      },
-      {
-        id: 8,
-        title: "Ideal Profiles",
-        content: "Create three detailed profiles of ideal customers who are willing to invest in high-ticket courses. For each profile, describe their background, goals, challenges, and why they need my program."
-      },
-      {
-        id: 9,
-        title: "Demographic and Psychographic Table",
-        content: "Combine the demographic, psychographic, and behavioral patterns of the three profiles into a detailed column table, including values, hobbies, fears, joys, their dislikes, their fears, their objections, and behaviors."
-      },
-      {
-        id: 10,
-        title: "Success and Challenges",
-        content: "For each profile, describe the 3 types of people who would succeed with the program/benefitting from the service or business offering and the type who would not. Present the findings in a two-column table."
-      },
-      {
-        id: 11,
-        title: "Detailed Avatar",
-        content: "Let's create a detailed avatar for my ideal customer/student. Based on all 3 avatar profiles above, list the following demographics: age, where they live, gender, income level, marital status, children or no, occupation, upcoming life events, employment status, employment field, and any other relevant details you may find important."
-      },
-      {
-        id: 12,
-        title: "Comprehensive Summary",
-        content: "Combine all of the above information into a detailed and informative columned table that will help me make better marketing, business, and sales decisions."
       }
     ]
   },
@@ -160,7 +125,41 @@ const STEPS: Step[] = [
     number: 3,
     title: "Avatar Research",
     description: "Create detailed ideal customer profiles and personas",
-    prompts: []
+    prompts: [ {
+      id: 6,
+      title: "Audience Overview",
+      content: "Who are the individuals most interested in [your niche]? What challenges do they face, and what are their ultimate goals? What hobbies, passions, or interests intersect with this niche?"
+    },
+    {
+      id: 7,
+      title: "Audience Queries and Gaps",
+      content: "What questions or misconceptions does my audience have about this niche? What knowledge gaps need to be addressed for them to succeed?"
+    },
+    {
+      id: 8,
+      title: "Ideal Profiles",
+      content: "Create three detailed profiles of ideal customers who are willing to invest in high-ticket courses. For each profile, describe their background, goals, challenges, and why they need my program."
+    },
+    {
+      id: 9,
+      title: "Demographic and Psychographic Table",
+      content: "Combine the demographic, psychographic, and behavioral patterns of the three profiles into a detailed column table, including values, hobbies, fears, joys, their dislikes, their fears, their objections, and behaviors."
+    },
+    {
+      id: 10,
+      title: "Success and Challenges",
+      content: "For each profile, describe the 3 types of people who would succeed with the program/benefitting from the service or business offering and the type who would not. Present the findings in a two-column table."
+    },
+    {
+      id: 11,
+      title: "Detailed Avatar",
+      content: "Let's create a detailed avatar for my ideal customer/student. Based on all 3 avatar profiles above, list the following demographics: age, where they live, gender, income level, marital status, children or no, occupation, upcoming life events, employment status, employment field, and any other relevant details you may find important."
+    },
+    {
+      id: 12,
+      title: "Comprehensive Summary",
+      content: "Combine all of the above information into a detailed and informative columned table that will help me make better marketing, business, and sales decisions."
+    }]
   },
   {
     number: 4,
