@@ -499,50 +499,48 @@ export async function POST(req: Request) {
       );
     }
 
-    // Add timeout handling
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), 50000);
-    });
-
-    const completionPromise = openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-0125-preview",
       messages: [
         { 
           role: "system", 
           content: createSystemPrompt(step, currentPromptId, projectContext)
         },
-        ...messages.map((m: ChatMessage) => ({
+        ...messages.slice(-10).map((m: ChatMessage) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
         }))
       ],
       temperature: 0.7,
-      max_tokens: 2500, // Limit token length
-      stream: false, // Disable streaming for faster response
+      max_tokens: 4096,
+      stream: true, // Enable streaming
     });
 
-    // Race between completion and timeout
-    const completion = await Promise.race([completionPromise, timeoutPromise]) as OpenAI.Chat.Completions.ChatCompletion;
-
-    // Calculate next prompt ID
-    const currentStep = STEP_PROMPTS[step as keyof typeof STEP_PROMPTS];
-    const nextPromptId = currentPromptId < currentStep.prompts.length 
-      ? currentPromptId + 1 
-      : currentPromptId;
-
-    return new NextResponse(
-      JSON.stringify({
-        message: completion.choices[0].message.content,
-        nextPromptId,
-        isStepComplete: nextPromptId > currentStep.prompts.length
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    // Create stream response
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          for await (const chunk of completion) {
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+            }
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
       }
-    );
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
 
   } catch (error) {
     console.error('Full Service API Error:', error);

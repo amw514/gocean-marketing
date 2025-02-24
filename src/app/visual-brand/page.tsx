@@ -19,7 +19,7 @@ export default function VisualBrand() {
             className="w-full py-6 text-lg bg-green-600 hover:bg-green-700 text-white border-green-500 hover:border-green-600 transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg"
             onClick={() => handleClick('/visual-brand/identity')}
           >
-            Brand Visual Identity
+            Brand Visual Identity (do once)
           </Button>
 
           <Button

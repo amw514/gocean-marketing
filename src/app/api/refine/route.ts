@@ -38,7 +38,7 @@ Please ${pdfContent ? 'update the document' : 'continue'} based on this informat
     ];
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-0125-preview",
       messages,
       temperature: 0.7,
     });

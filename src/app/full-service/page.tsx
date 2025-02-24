@@ -13,6 +13,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   step?: number;
+  id?: number;
 }
 
 interface Project {
@@ -315,42 +316,33 @@ export default function FullService() {
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
-    
+
     setIsLoading(true);
     const currentProject = getCurrentProject();
     if (!currentProject) return;
 
-    // Add current prompt to completed prompts when sending message
     if (selectedPrompt) {
       setProjects(prev => prev.map(p => {
         if (p.id === activeProject) {
           return {
             ...p,
-            completedPrompts: [...p.completedPrompts, selectedPrompt.id],
-            currentPromptId: selectedPrompt.id + 1 // Increment to next prompt
+            completedPrompts: [...p.completedPrompts, selectedPrompt.id]
           };
         }
         return p;
       }));
     }
 
-    const newUserMessage: Message = { 
-      role: "user", 
-      content: input,
-      step: currentProject.currentStep 
-    };
-
-    // Update project messages
+    const newMessage = { role: "user" as const, content: input };
     setProjects(prev => prev.map(p => {
       if (p.id === activeProject) {
         return {
           ...p,
-          messages: [...p.messages, newUserMessage]
+          messages: [...p.messages, newMessage]
         };
       }
       return p;
     }));
-
     setInput("");
 
     try {
@@ -358,69 +350,89 @@ export default function FullService() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...currentProject.messages, newUserMessage],
+          messages: [...getCurrentProject()?.messages || [], newMessage],
           step: currentProject.currentStep,
           currentPromptId: currentProject.currentPromptId,
           projectContext: currentProject.name
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        setProjects(prev => prev.map(p => {
-          if (p.id === activeProject) {
-            return {
-              ...p,
-              messages: [
-                ...p.messages,
-                {
-                  role: "assistant",
-                  content: "I apologize, but I encountered an error. Please try again with a shorter message or break your request into smaller parts."
-                }
-              ]
-            };
-          }
-          return p;
-        }));
-        return;
-      }
-
-      if (data.isStepComplete) {
-        moveToNextStep();
-      } else {
-        setProjects(prev => prev.map(p => {
-          if (p.id === activeProject) {
-            return {
-              ...p,
-              messages: [...p.messages, { 
-                role: "assistant", 
-                content: data.message,
-                step: p.currentStep 
-              }],
-              currentPromptId: data.nextPromptId
-            };
-          }
-          return p;
-        }));
-      }
-    } catch (error) {
-      console.error("Chat error:", error);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      // Create a temporary message for streaming
+      const tempMessage = { role: "assistant" as const, content: "", id: Date.now() };
       setProjects(prev => prev.map(p => {
         if (p.id === activeProject) {
           return {
             ...p,
-            messages: [
-              ...p.messages,
-              {
-                role: "assistant",
-                content: "The request timed out. Please try again with a shorter message or break your request into smaller parts."
+            messages: [...p.messages, tempMessage]
+          };
+        }
+        return p;
+      }));
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader available');
+
+      let accumulatedContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Convert the chunk to text
+        const text = new TextDecoder().decode(value);
+        const lines = text.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(5));
+              if (data.content) {
+                accumulatedContent += data.content;
+                // Update the streaming message
+                setProjects(prev => prev.map(p => {
+                  if (p.id === activeProject) {
+                    return {
+                      ...p,
+                      messages: p.messages.map(m => 
+                        m.id === tempMessage.id 
+                          ? { ...m, content: accumulatedContent }
+                          : m
+                      )
+                    };
+                  }
+                  return p;
+                }));
               }
-            ]
+            } catch (e) {
+              console.error('Error parsing chunk:', e);
+            }
+          }
+        }
+      }
+
+      // Save the final message to project
+      setProjects(prev => prev.map(p => {
+        if (p.id === activeProject) {
+          return {
+            ...p,
+            messages: [...p.messages, { role: "assistant", content: accumulatedContent }]
+          };
+        }
+        return p;
+      }));
+
+    } catch (error) {
+      console.error("Error:", error);
+      setProjects(prev => prev.map(p => {
+        if (p.id === activeProject) {
+          return {
+            ...p,
+            messages: [...p.messages, {
+              role: "assistant",
+              content: "I apologize, but I encountered an error. Please try again."
+            }]
           };
         }
         return p;
@@ -617,11 +629,6 @@ export default function FullService() {
                     </ReactMarkdown>
                   </div>
                 ))}
-                {isLoading && (
-                  <div className="bg-gray-700 p-3 rounded-lg max-w-[80%]">
-                    <p className="text-white">Processing...</p>
-                  </div>
-                )}
               </div>
 
               {(() => {
