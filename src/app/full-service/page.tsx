@@ -412,17 +412,6 @@ export default function FullService() {
         }
       }
 
-      // Save the final message to project
-      setProjects(prev => prev.map(p => {
-        if (p.id === activeProject) {
-          return {
-            ...p,
-            messages: [...p.messages, { role: "assistant", content: accumulatedContent }]
-          };
-        }
-        return p;
-      }));
-
     } catch (error) {
       console.error("Error:", error);
       setProjects(prev => prev.map(p => {
