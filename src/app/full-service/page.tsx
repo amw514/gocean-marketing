@@ -491,7 +491,7 @@ export default function FullService() {
               className={cn(
                 "px-3 py-2 rounded-full text-sm text-white transition-colors",
                 isCompleted && "bg-green-800 hover:bg-green-900",
-                !isCompleted && isAvailable && "bg-green-600 hover:bg-green-700",
+                !isCompleted && isAvailable && "bg-green-500 hover:bg-green-700",
                 !isCompleted && !isAvailable && "bg-gray-700 opacity-50 cursor-not-allowed"
               )}
             >
