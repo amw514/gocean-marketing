@@ -224,7 +224,7 @@ export default function Content() {
     window.open(discordUrl, '_blank');
     
     // Copy /imagine command to clipboard for easy pasting
-    navigator.clipboard.writeText(`/imagine ${content}`);
+    navigator.clipboard.writeText(`${content}`);
   };
 
   return (
