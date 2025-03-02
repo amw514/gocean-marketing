@@ -11,6 +11,7 @@ import {
   FiChevronLeft,
   FiFolder,
   FiX,
+  FiCopy,
 } from "react-icons/fi";
 import ReactMarkdown from "react-markdown";
 import { exportToPdf, exportToTxt } from "@/lib/export";
@@ -313,7 +314,7 @@ export default function Content() {
                   <div
                     key={index}
                     className={cn(
-                      "p-3 rounded-lg",
+                      "p-3 rounded-lg relative group",
                       message.role === "user"
                         ? "bg-red-600 ml-auto"
                         : "bg-gray-700",
@@ -323,6 +324,15 @@ export default function Content() {
                     <ReactMarkdown className="text-white prose prose-invert prose-sm max-w-none">
                       {message.content}
                     </ReactMarkdown>
+                    {message.role === "assistant" && (
+                      <button
+                        onClick={() => navigator.clipboard.writeText(message.content)}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Copy to clipboard"
+                      >
+                        <FiCopy className="text-white hover:text-gray-300" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
