@@ -17,7 +17,7 @@ export default auth((req) => {
   }
 
   // Check for authorized email
-  const allowedEmails = ["bigbyteberry@gmail.com","marinalabaff2@gmail.com"];
+  const allowedEmails = ["bigbyteberry@gmail.com","marinalabaff2@gmail.com","joey@revivalofrevenue.com"];
   if (!allowedEmails.includes(req.auth?.user?.email || "")) {
     return Response.redirect(new URL("/", req.nextUrl));
   }
