@@ -25,6 +25,11 @@ const organicPlatforms: PlatformButton[] = [
   { name: "Pinterest", path: "/new-campaign/pinterest" },
 ];
 
+const crmPlatforms: PlatformButton[] = [
+  { name: "Basic CRM Setup", path: "/new-campaign/basic-crm" },
+  { name: "Campaign Custom Nurture", path: "/new-campaign/custom-nurture" },
+];
+
 export default function NewCampaign() {
   const handleClick = (path: string) => {
     window.open(path, "_blank");
@@ -35,9 +40,28 @@ export default function NewCampaign() {
       <div className="max-w-4xl mx-auto">
         {/* Title */}
         <h1 className="text-2xl text-center text-white my-12">
-          Choose the platform with the highest amount of qualified buyers for your campaign.
-          Choose where we will be launching the campaign from:
+          Choose the platform with the highest amount of qualified buyers for
+          your campaign. Choose where we will be launching the campaign from:
         </h1>
+
+        {/* CRM Platforms Section */}
+        <div className="mb-12">
+          <h2 className="text-xl font-semibold text-white mb-6">
+            CRM & Nurture:
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {crmPlatforms.map((platform) => (
+              <Button
+                key={platform.name}
+                variant="outline"
+                className="w-full py-6 text-lg bg-purple-600 hover:bg-purple-700 text-white border-purple-500 hover:border-purple-600 transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg"
+                onClick={() => handleClick(platform.path)}
+              >
+                {platform.name}
+              </Button>
+            ))}
+          </div>
+        </div>
 
         {/* Paid Platforms Section */}
         <div className="mb-12">
