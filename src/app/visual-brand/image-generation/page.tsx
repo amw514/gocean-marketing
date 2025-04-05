@@ -341,7 +341,25 @@ export default function ImageGeneration() {
                         className="object-cover"
                       />
                     </div>
-                    <div className="mt-2 flex justify-end">
+                    <div className="mt-2 flex justify-end gap-2">
+                      <Button
+                        onClick={() => {
+                          setInput(image.prompt);
+                          if (chatContainerRef.current) {
+                            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                          }
+                          setTimeout(() => {
+                            const textarea = document.querySelector('textarea');
+                            if (textarea) {
+                              textarea.focus();
+                            }
+                          }, 100);
+                        }}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <FiImage className="mr-1" /> Modify & Regenerate
+                      </Button>
                       <Button
                         onClick={() => downloadImage(image.url, getCurrentProject()?.name || 'image')}
                         size="sm"
